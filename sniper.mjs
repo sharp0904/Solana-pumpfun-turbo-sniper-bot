@@ -60,34 +60,44 @@ function log(message, color = 'white', type = 'info') {
 }
 
 function connectWebSocket() {
+  if (!process.env.WS_ENDPOINT) {
+    log('WebSocket endpoint is not defined. Please set WS_ENDPOINT in your environment variables.', 'red', 'error');
+    return;
+  }
+
   ws = new WebSocket(process.env.WS_ENDPOINT);
 
   ws.on('open', () => {
-    log('Connection opened.', 'bright');
+    log('✅ WebSocket connection opened.', 'bright');
     subscribeToNewTokens();
     reconnectAttempts = 0;
   });
 
   ws.on('message', async (data) => {
-    const newTokenInfo = JSON.parse(data);
-    if (newTokenInfo.message === 'Successfully subscribed to token creation events.') {
-      log(`Subscription message: ${newTokenInfo.message}`, 'blue');
-    } else {
-      log(`Received new token!: ${JSON.stringify(newTokenInfo)}`, 'blue');
-      await handleNewToken(newTokenInfo);
+    try {
+      const newTokenInfo = JSON.parse(data);
+
+      if (newTokenInfo.message === 'Successfully subscribed to token creation events.') {
+        log(`📩 Subscription message: ${newTokenInfo.message}`, 'blue');
+      } else {
+        log(`🎯 New Token Detected: ${JSON.stringify(newTokenInfo)}`, 'blue');
+        await handleNewToken(newTokenInfo);
+      }
+    } catch (error) {
+      log(`❌ Error parsing WebSocket message: ${error.message}`, 'red', 'error');
     }
   });
 
   ws.on('error', (error) => {
-    log(`WebSocket error: ${error.message}`, 'red', 'error');
-    handleWebSocketError();
+    log(`🚨 WebSocket error: ${error.message}`, 'red', 'error');
   });
 
   ws.on('close', () => {
-    log('WebSocket connection closed. Reconnecting...', 'yellow', 'error');
+    log('⚠️ WebSocket connection closed. Attempting to reconnect...', 'yellow', 'error');
     handleWebSocketError();
   });
 }
+
 
 function subscribeToNewTokens() {
   const payload = { method: 'subscribeNewToken' };
