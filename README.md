@@ -6,7 +6,7 @@
 
 ## Contact me
 
-Telegram: [@dwlee918](https://t.me/@ether_vision)
+Telegram: [@ether_vision](https://t.me/@ether_vision)
 
 
 ## Features
